@@ -270,11 +270,13 @@ resource "aws_launch_template" "this" {
   ram_disk_id = var.ram_disk_id
 
   dynamic "tag_specifications" {
-    for_each = toset(var.tag_specifications)
+    for_each = ["instance", "volume", "elastic-gpu", "network-interface", "spot-instances-request"]
 
     content {
       resource_type = tag_specifications.key
-      tags          = merge(var.tags, { Name = var.name }, var.launch_template_tags)
+      tags = {
+        ENV = "dev"
+      }
     }
   }
 
@@ -282,7 +284,11 @@ resource "aws_launch_template" "this" {
   user_data              = module.user_data.user_data
   vpc_security_group_ids = length(var.network_interfaces) > 0 ? [] : local.security_group_ids
 
-  tags = var.tags
+  tags = merge(
+      {
+        "foo" = "bar-eks-workload-node"
+      },
+    )
 
   # Prevent premature access of policies by pods that
   # require permissions on create/destroy that depend on nodes
